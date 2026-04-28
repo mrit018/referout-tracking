@@ -162,3 +162,82 @@ export function buildDateRangeParams(currentChwpart: string): SqlParams {
     current_chwpart: { value: currentChwpart, value_type: 'string' },
   };
 }
+
+/**
+ * Full patient referral-out list with date/time range filter.
+ *
+ * @param dbType — target database flavour
+ */
+export function getReferOutPatientListSql(dbType: DatabaseType): string {
+  const dateFmt = queryBuilder.dateFormat(dbType, 'r.refer_date', '%Y-%m-%d');
+
+  return `
+SELECT
+  r.refer_number,
+  ${dateFmt} AS refer_date,
+  r.refer_time,
+  r.hn,
+  CONCAT(p.pname, p.fname, ' ', p.lname) AS patient_name,
+  p.sex,
+  p.birthday,
+  CONCAT(h.hosptype, ' ', h.name) AS dest_hospital,
+  h.chwpart,
+  d.name AS doctor_name,
+  pt.name AS pttype_name,
+  e.referout_emergency_type_name AS emergency_type,
+  k.department AS department_name,
+  r.pdx,
+  r.pre_diagnosis,
+  r.refer_point,
+  r.with_nurse,
+  r.with_doctor,
+  r.with_ambulance
+FROM referout r
+LEFT JOIN patient p ON p.hn = r.hn
+LEFT JOIN hospcode h ON h.hospcode = r.refer_hospcode
+LEFT JOIN doctor d ON d.code = r.doctor
+LEFT JOIN ovst o ON o.vn = r.vn
+LEFT JOIN pttype pt ON pt.pttype = o.pttype
+LEFT JOIN referout_emergency_type e ON e.referout_emergency_type_id = r.referout_emergency_type_id
+LEFT JOIN kskdepartment k ON k.depcode = r.depcode
+WHERE r.refer_date >= :start_date
+  AND r.refer_date <= :end_date
+  AND (COALESCE(:start_time, '') = '' OR r.refer_time >= :start_time)
+  AND (COALESCE(:end_time, '') = '' OR r.refer_time <= :end_time)
+ORDER BY r.refer_date DESC, r.refer_time DESC
+LIMIT :limit OFFSET :offset
+`;
+}
+
+/**
+ * Count total records for pagination.
+ */
+export function getReferOutPatientCountSql(): string {
+  return `
+SELECT COUNT(*) AS total_count
+FROM referout r
+WHERE r.refer_date >= :start_date
+  AND r.refer_date <= :end_date
+  AND (COALESCE(:start_time, '') = '' OR r.refer_time >= :start_time)
+  AND (COALESCE(:end_time, '') = '' OR r.refer_time <= :end_time)
+`;
+}
+
+/** Build params for patient-list date/time range queries. */
+export function buildPatientListParams(
+  startDate: string,
+  endDate: string,
+  startTime: string,
+  endTime: string,
+  limit: number,
+  offset: number,
+): SqlParams {
+  return {
+    start_date: { value: startDate, value_type: 'date' },
+    end_date: { value: endDate, value_type: 'date' },
+    start_time: { value: startTime, value_type: 'time' },
+    end_time: { value: endTime, value_type: 'time' },
+    limit: { value: limit, value_type: 'integer' },
+    offset: { value: offset, value_type: 'integer' },
+  };
+}

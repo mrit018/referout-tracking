@@ -9,6 +9,7 @@ import { useBmsSessionContext } from '@/contexts/BmsSessionContext';
 import {
   Activity,
   LayoutDashboard,
+  Users,
   LogOut,
   Database,
   ChevronDown,
@@ -29,6 +30,7 @@ interface NavTab {
 
 const NAV_TABS: NavTab[] = [
   { label: 'หน้าหลัก', path: '/', icon: LayoutDashboard },
+  { label: 'รายชื่อผู้ป่วย', path: '/patients', icon: Users },
 ];
 
 // ---------------------------------------------------------------------------
