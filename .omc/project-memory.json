@@ -257,6 +257,12 @@
       "accessCount": 1,
       "lastAccessed": 1777347596431,
       "type": "file"
+    },
+    {
+      "path": "specs/referout-tracking/plan.md",
+      "accessCount": 1,
+      "lastAccessed": 1777347824838,
+      "type": "file"
     }
   ],
   "userDirectives": []
