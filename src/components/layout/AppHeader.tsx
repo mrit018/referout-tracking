@@ -3,6 +3,7 @@
 // Refined professional navigation with modern aesthetics
 // =============================================================================
 
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useBmsSessionContext } from '@/contexts/BmsSessionContext';
 import {
@@ -11,6 +12,8 @@ import {
   LogOut,
   Database,
   ChevronDown,
+  Copy,
+  Check,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -35,11 +38,31 @@ const NAV_TABS: NavTab[] = [
 export function AppHeader() {
   const { session, disconnectSession } = useBmsSessionContext();
   const location = useLocation();
+  const [copied, setCopied] = useState(false);
 
   const databaseLabel =
     session?.databaseType === 'postgresql' ? 'PostgreSQL' : 'MySQL';
 
   const userInitial = session?.userInfo.name?.charAt(0).toUpperCase() ?? '?';
+
+  const copySessionId = async () => {
+    if (!session?.sessionId) return;
+    try {
+      await navigator.clipboard.writeText(session.sessionId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Fallback for insecure contexts
+      const textarea = document.createElement('textarea');
+      textarea.value = session.sessionId;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   return (
     <header className="app-header">
@@ -117,6 +140,22 @@ export function AppHeader() {
                 <div className="user-info">
                   <span className="user-name">{session.userInfo.name}</span>
                   <span className="user-dept">{session.userInfo.department}</span>
+                  <span className="user-session">
+                    <span className="session-id-label">เซสชัน</span>
+                    <span className="session-id-value">{session.sessionId}</span>
+                    <button
+                      onClick={copySessionId}
+                      className="session-copy-btn"
+                      title="คัดลอกรหัสเซสชัน"
+                      type="button"
+                    >
+                      {copied ? (
+                        <Check className="h-3 w-3 text-green-400" />
+                      ) : (
+                        <Copy className="h-3 w-3" />
+                      )}
+                    </button>
+                  </span>
                 </div>
                 <ChevronDown className="h-4 w-4 text-white/40" />
               </div>
@@ -351,6 +390,46 @@ export function AppHeader() {
           font-size: 0.625rem;
           color: rgba(255, 255, 255, 0.4);
           line-height: 1.2;
+        }
+
+        .user-session {
+          display: flex;
+          align-items: center;
+          gap: 0.375rem;
+          margin-top: 0.125rem;
+        }
+
+        .session-id-label {
+          font-size: 0.625rem;
+          color: rgba(255, 255, 255, 0.35);
+          line-height: 1.2;
+        }
+
+        .session-id-value {
+          font-size: 0.625rem;
+          color: rgba(255, 255, 255, 0.55);
+          line-height: 1.2;
+          font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+          letter-spacing: 0.02em;
+        }
+
+        .session-copy-btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          padding: 0.125rem;
+          margin-left: 0.125rem;
+          background: transparent;
+          border: none;
+          border-radius: 0.25rem;
+          color: rgba(255, 255, 255, 0.4);
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+
+        .session-copy-btn:hover {
+          color: rgba(255, 255, 255, 0.8);
+          background: rgba(255, 255, 255, 0.1);
         }
 
         .disconnect-btn {
