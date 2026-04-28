@@ -1,0 +1,245 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1777347191422,
+  "projectRoot": "/workspace/repo",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      },
+      {
+        "name": "TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "tsconfig.json"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "react",
+        "version": "19.2.4",
+        "category": "frontend"
+      },
+      {
+        "name": "react-dom",
+        "version": "19.2.4",
+        "category": "frontend"
+      },
+      {
+        "name": "vite",
+        "version": "8.0.2",
+        "category": "build"
+      },
+      {
+        "name": "vitest",
+        "version": "4.1.1",
+        "category": "testing"
+      }
+    ],
+    "packageManager": "npm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": "npm run build",
+    "testCommand": "npm test",
+    "lintCommand": "npm run lint",
+    "devCommand": "npm run dev",
+    "scripts": {
+      "dev": "vite",
+      "build": "tsc -b && vite build",
+      "lint": "eslint .",
+      "preview": "vite preview",
+      "test": "vitest run",
+      "test:watch": "vitest",
+      "test:unit": "vitest run tests/unit",
+      "test:component": "vitest run tests/component",
+      "test:integration": "vitest run tests/integration",
+      "test:api": "vitest run tests/api",
+      "test:coverage": "vitest run --coverage"
+    }
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": "type-based"
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs",
+      "public",
+      "src",
+      "tests"
+    ],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 1,
+      "lastAccessed": 1777347191243,
+      "keyFiles": [
+        "BMS-SESSION-FOR-DEV.md"
+      ]
+    },
+    "public": {
+      "path": "public",
+      "purpose": "Public files",
+      "fileCount": 2,
+      "lastAccessed": 1777347191244,
+      "keyFiles": [
+        "favicon.svg",
+        "icons.svg"
+      ]
+    },
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 4,
+      "lastAccessed": 1777347191329,
+      "keyFiles": [
+        "App.tsx",
+        "index.css",
+        "main.tsx",
+        "vite-env.d.ts"
+      ]
+    },
+    "tests": {
+      "path": "tests",
+      "purpose": "Test files",
+      "fileCount": 1,
+      "lastAccessed": 1777347191337,
+      "keyFiles": [
+        "setup.ts"
+      ]
+    },
+    "src/assets": {
+      "path": "src/assets",
+      "purpose": "Static assets",
+      "fileCount": 2,
+      "lastAccessed": 1777347191340,
+      "keyFiles": [
+        "hero.png",
+        "vite.svg"
+      ]
+    },
+    "src/components": {
+      "path": "src/components",
+      "purpose": "UI components",
+      "fileCount": 0,
+      "lastAccessed": 1777347191340,
+      "keyFiles": []
+    },
+    "src/lib": {
+      "path": "src/lib",
+      "purpose": "Library code",
+      "fileCount": 1,
+      "lastAccessed": 1777347191340,
+      "keyFiles": [
+        "utils.ts"
+      ]
+    },
+    "src/pages": {
+      "path": "src/pages",
+      "purpose": "Page components",
+      "fileCount": 1,
+      "lastAccessed": 1777347191340,
+      "keyFiles": [
+        "Overview.tsx"
+      ]
+    },
+    "src/services": {
+      "path": "src/services",
+      "purpose": "Business logic services",
+      "fileCount": 9,
+      "lastAccessed": 1777347191340,
+      "keyFiles": [
+        "activeSession.ts",
+        "apiQueue.ts",
+        "asr.ts"
+      ]
+    },
+    "tests/api": {
+      "path": "tests/api",
+      "purpose": "API routes",
+      "fileCount": 3,
+      "lastAccessed": 1777347191341,
+      "keyFiles": [
+        "errorHandling.test.ts",
+        "sessionApi.test.ts",
+        "sqlApi.test.ts"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "REQUIREMENTS.md",
+      "accessCount": 1,
+      "lastAccessed": 1777347287544,
+      "type": "file"
+    },
+    {
+      "path": "AGENT_RULES.md",
+      "accessCount": 1,
+      "lastAccessed": 1777347288346,
+      "type": "file"
+    },
+    {
+      "path": "src/pages/Overview.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1777347327642,
+      "type": "file"
+    },
+    {
+      "path": "src/services/bmsSession.ts",
+      "accessCount": 1,
+      "lastAccessed": 1777347327940,
+      "type": "file"
+    },
+    {
+      "path": ".specify/templates/tasks-template.md",
+      "accessCount": 1,
+      "lastAccessed": 1777347345739,
+      "type": "file"
+    },
+    {
+      "path": ".specify/templates/constitution-template.md",
+      "accessCount": 1,
+      "lastAccessed": 1777347345829,
+      "type": "file"
+    },
+    {
+      "path": ".specify/templates/plan-template.md",
+      "accessCount": 1,
+      "lastAccessed": 1777347346042,
+      "type": "file"
+    },
+    {
+      "path": ".specify/templates/spec-template.md",
+      "accessCount": 1,
+      "lastAccessed": 1777347346120,
+      "type": "file"
+    },
+    {
+      "path": "specs/referout-tracking/brainstorm.md",
+      "accessCount": 1,
+      "lastAccessed": 1777347448451,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}
