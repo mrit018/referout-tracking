@@ -269,6 +269,12 @@
       "accessCount": 1,
       "lastAccessed": 1777347904131,
       "type": "file"
+    },
+    {
+      "path": "specs/referout-tracking/analyze.md",
+      "accessCount": 1,
+      "lastAccessed": 1777347955032,
+      "type": "file"
     }
   ],
   "userDirectives": []
