@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import SqlPreviewDialog from '@/components/SqlPreviewDialog';
+import { exportToCsv, exportToExcel, sendToGoogleScript } from '@/utils/exportUtils';
 import {
   Dialog,
   DialogContent,
@@ -50,6 +51,9 @@ import {
   FileText,
   Building2,
   Code2,
+  FileDown,
+  FileSpreadsheet,
+  Send,
 } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
@@ -151,6 +155,33 @@ interface RecentRefer {
 }
 
 // ---------------------------------------------------------------------------
+// Export helper
+// ---------------------------------------------------------------------------
+
+function mapForExport(p: ReferPatient): Record<string, string> {
+  return {
+    'เลขที่ส่งต่อ': p.refer_number || '',
+    'วันที่': p.refer_date || '',
+    'เวลา': p.refer_time?.slice(0, 5) || '',
+    'HN': p.hn || '',
+    'ผู้ป่วย': p.patient_name || '',
+    'เพศ': getSexLabel(p.sex),
+    'อายุ': String(calcAge(p.birthday)),
+    'โรงพยาบาลปลายทาง': p.dest_hospital || '',
+    'แพทย์': p.doctor_name || '',
+    'สิทธิ': p.pttype_name || '',
+    'ระดับเร่งด่วน': p.emergency_type || '',
+    'แผนก': p.department_name || '',
+    'PDX': p.pdx || '',
+    'วินิจฉัย': p.pre_diagnosis || '',
+    'จุดส่งต่อ': p.refer_point || '',
+    'นำส่ง-พยาบาล': p.with_nurse === 'Y' ? 'ใช่' : '',
+    'นำส่ง-แพทย์': p.with_doctor === 'Y' ? 'ใช่' : '',
+    'นำส่ง-รถพยาบาล': p.with_ambulance === 'Y' ? 'ใช่' : '',
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
@@ -167,6 +198,10 @@ export default function ReferOutPatientList() {
   const [page, setPage] = useState(0);
   const [detailRecord, setDetailRecord] = useState<RecentRefer | null>(null);
   const [showSql, setShowSql] = useState(false);
+  const [showGoogleDialog, setShowGoogleDialog] = useState(false);
+  const [googleScriptUrl, setGoogleScriptUrl] = useState(() => localStorage.getItem('googleScriptUrl') || '');
+  const [exporting, setExporting] = useState(false);
+  const [exportStatus, setExportStatus] = useState('');
 
   // -----------------------------------------------------------------
   // Fetch recent referrals
@@ -227,6 +262,51 @@ export default function ReferOutPatientList() {
     listQuery.reset();
   }, [countQuery, listQuery]);
 
+  const fetchAllForExport = useCallback(async (): Promise<Record<string, string>[]> => {
+    if (!connectionConfig) return [];
+    const sql = getReferOutPatientListSql(dbType);
+    const params = buildPatientListParams(startDate, endDate, startTime, endTime, 99999, 0);
+    const res = await executeSqlViaApiQueued(sql, connectionConfig, params, marketplaceToken);
+    const patients = (res.data ?? []) as unknown as ReferPatient[];
+    return patients.map(mapForExport);
+  }, [connectionConfig, dbType, startDate, endDate, startTime, endTime, marketplaceToken]);
+
+  const handleExport = useCallback(async (format: 'csv' | 'excel') => {
+    setExporting(true);
+    setExportStatus('');
+    try {
+      const rows = await fetchAllForExport();
+      if (rows.length === 0) { setExportStatus('ไม่มีข้อมูล'); return; }
+      const ts = new Date().toISOString().slice(0, 10);
+      if (format === 'csv') {
+        exportToCsv(rows, `referout_${ts}.csv`);
+      } else {
+        await exportToExcel(rows, `referout_${ts}.xlsx`);
+      }
+      setExportStatus(`ส่งออก ${rows.length} รายการสำเร็จ`);
+    } catch (err) {
+      setExportStatus(`ส่งออกไม่สำเร็จ: ${err instanceof Error ? err.message : 'Error'}`);
+    } finally {
+      setExporting(false);
+    }
+  }, [fetchAllForExport]);
+
+  const handleSendToGoogle = useCallback(async () => {
+    if (!googleScriptUrl) return;
+    setExporting(true);
+    setExportStatus('');
+    try {
+      const rows = await fetchAllForExport();
+      if (rows.length === 0) { setExportStatus('ไม่มีข้อมูล'); return; }
+      const result = await sendToGoogleScript(rows, googleScriptUrl);
+      setExportStatus(result.message);
+    } catch (err) {
+      setExportStatus(`ส่งไม่สำเร็จ: ${err instanceof Error ? err.message : 'Error'}`);
+    } finally {
+      setExporting(false);
+    }
+  }, [fetchAllForExport, googleScriptUrl]);
+
   useEffect(() => {
     if (connectionConfig) {
       doSearch();
@@ -265,7 +345,24 @@ export default function ReferOutPatientList() {
           <Code2 className="h-4 w-4" />
           SQL
         </Button>
+        <Button variant="outline" size="sm" onClick={() => handleExport('csv')} disabled={exporting} className="gap-1.5">
+          <FileDown className="h-4 w-4" />
+          CSV
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => handleExport('excel')} disabled={exporting} className="gap-1.5">
+          <FileSpreadsheet className="h-4 w-4" />
+          Excel
+        </Button>
+        <Button variant="outline" size="sm" onClick={() => setShowGoogleDialog(true)} disabled={exporting} className="gap-1.5">
+          <Send className="h-4 w-4" />
+          Google
+        </Button>
       </div>
+      {exportStatus && (
+        <div className={`export-status ${exportStatus.includes('สำเร็จ') ? 'export-success' : 'export-error'}`}>
+          {exportStatus}
+        </div>
+      )}
 
       {/* Filters */}
       <Card className="filter-card">
@@ -478,6 +575,43 @@ export default function ReferOutPatientList() {
       {/* SQL Preview */}
       <SqlPreviewDialog open={showSql} onOpenChange={setShowSql} queries={sqlQueries} />
 
+      {/* Google Script Dialog */}
+      <Dialog open={showGoogleDialog} onOpenChange={setShowGoogleDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Send className="h-5 w-5" />
+              ส่งข้อมูลไป Google Sheets
+            </DialogTitle>
+            <DialogDescription>
+              ส่งรายชื่อผู้ป่วยส่งต่อไปยัง Google Sheets ผ่าน Google Apps Script
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-sm font-medium">Google Apps Script URL</label>
+              <input
+                type="text"
+                value={googleScriptUrl}
+                onChange={(e) => {
+                  setGoogleScriptUrl(e.target.value);
+                  localStorage.setItem('googleScriptUrl', e.target.value);
+                }}
+                placeholder="https://script.google.com/macros/s/.../exec"
+                className="filter-input"
+              />
+              <p className="text-xs text-muted-foreground">
+                วิธีใช้: ดูตัวอย่าง code.gs ที่ docs/google-apps-script/
+              </p>
+            </div>
+            <Button onClick={handleSendToGoogle} disabled={exporting || !googleScriptUrl}>
+              <Send className="h-4 w-4 mr-2" />
+              {exporting ? 'กำลังส่ง...' : 'ส่งข้อมูล'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Styles */}
       <style>{`
         .patient-list-page {
@@ -490,6 +624,34 @@ export default function ReferOutPatientList() {
           display: flex;
           align-items: flex-start;
           justify-content: space-between;
+          flex-wrap: wrap;
+          gap: 0.75rem;
+        }
+
+        .header-actions {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          flex-wrap: wrap;
+        }
+
+        .export-status {
+          font-size: 0.8125rem;
+          padding: 0.375rem 0.75rem;
+          border-radius: 0.375rem;
+          width: 100%;
+        }
+
+        .export-success {
+          color: #16a34a;
+          background: #f0fdf4;
+          border: 1px solid #bbf7d0;
+        }
+
+        .export-error {
+          color: #dc2626;
+          background: #fef2f2;
+          border: 1px solid #fecaca;
         }
 
         .patient-list-title {
