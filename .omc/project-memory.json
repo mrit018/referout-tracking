@@ -187,6 +187,12 @@
   },
   "hotPaths": [
     {
+      "path": "specs/referout-tracking/spec.md",
+      "accessCount": 3,
+      "lastAccessed": 1777347759532,
+      "type": "file"
+    },
+    {
       "path": "REQUIREMENTS.md",
       "accessCount": 1,
       "lastAccessed": 1777347287544,
