@@ -55,8 +55,8 @@ export function AppHeader() {
             <Activity className="h-5 w-5" />
           </div>
           <div className="brand-text">
-            <h1 className="brand-title">Template App</h1>
-            <span className="brand-subtitle">BMS Session</span>
+            <h1 className="brand-title">ทะเบียนส่งผู้ป่วย</h1>
+            <span className="brand-subtitle">ระบบบันทึกการส่งต่อผู้ป่วย HOSxP</span>
           </div>
         </div>
 
