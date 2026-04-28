@@ -245,6 +245,12 @@
       "accessCount": 1,
       "lastAccessed": 1777347533623,
       "type": "file"
+    },
+    {
+      "path": "specs/constitution.md",
+      "accessCount": 1,
+      "lastAccessed": 1777347596431,
+      "type": "file"
     }
   ],
   "userDirectives": []
