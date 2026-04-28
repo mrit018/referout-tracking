@@ -11,7 +11,6 @@ import {
   getReferSummarySql,
   getMonthlyTrendSql,
   getTopDestinationsSql,
-  getRecentReferOutSql,
   getReferByEmergencyTypeSql,
   buildChwpartParams,
   buildDateRangeParams,
@@ -20,21 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import SqlPreviewDialog from '@/components/SqlPreviewDialog';
 import {
   BarChart,
   Bar,
@@ -54,12 +39,12 @@ import {
   Building2,
   AlertTriangle,
   TrendingUp,
-  Calendar,
   Activity,
   Siren,
   Filter,
   RefreshCw,
   ChevronDown,
+  Code2,
 } from 'lucide-react';
 import type { DatabaseType } from '@/types';
 
@@ -89,18 +74,6 @@ interface TopDestination {
   hospname: string;
   chwpart: string;
   refer_count: number;
-}
-
-interface RecentRefer {
-  refer_number: string;
-  refer_date: string;
-  refer_time: string;
-  hn: string;
-  patient_name: string;
-  dest_hospital: string;
-  chwpart: string;
-  pdx: string;
-  refer_point: string;
 }
 
 interface EmergencyBreakdown {
@@ -191,15 +164,6 @@ function getZoneLabel(chwpart: string, currentChwpart: string): string {
   return 'นอกเขต 5';
 }
 
-function getZoneColor(zone: string): string {
-  switch (zone) {
-    case 'ในจังหวัด': return '#22c55e';
-    case 'นอกจังหวัดในเขต 5': return '#3b82f6';
-    case 'นอกเขต 5': return '#f59e0b';
-    default: return '#94a3b8';
-  }
-}
-
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -210,7 +174,7 @@ export default function ReferOutDashboard() {
   const [timeRange, setTimeRange] = useState<TimeRange>('thisMonth');
   const [currentChwpart, setCurrentChwpart] = useState<string>('');
   const [hospitalName, setHospitalName] = useState<string>('');
-  const [detailRecord, setDetailRecord] = useState<RecentRefer | null>(null);
+  const [showSql, setShowSql] = useState(false);
 
   // -----------------------------------------------------------------
   // Load current hospital info
@@ -316,20 +280,6 @@ export default function ReferOutDashboard() {
   });
 
   // -----------------------------------------------------------------
-  // Load recent referrals
-  // -----------------------------------------------------------------
-  const recentQuery = useQuery({
-    queryFn: async () => {
-      if (!connectionConfig) throw new Error('Missing data');
-      const days = daysBackFromRange(timeRange);
-      const sql = getRecentReferOutSql(dbType, days, 50);
-      const res = await executeSqlViaApiQueued(sql, connectionConfig, undefined, marketplaceToken);
-      return (res.data ?? []) as unknown as RecentRefer[];
-    },
-    enabled: !!connectionConfig,
-  });
-
-  // -----------------------------------------------------------------
   // Refresh all
   // -----------------------------------------------------------------
   const refreshAll = useCallback(() => {
@@ -337,8 +287,7 @@ export default function ReferOutDashboard() {
     trendQuery.execute();
     emergencyQuery.execute();
     topDestQuery.execute();
-    recentQuery.execute();
-  }, [summaryQuery, trendQuery, emergencyQuery, topDestQuery, recentQuery]);
+  }, [summaryQuery, trendQuery, emergencyQuery, topDestQuery]);
 
   useEffect(() => {
     if (currentChwpart) {
@@ -350,6 +299,16 @@ export default function ReferOutDashboard() {
   // Derived data
   // -----------------------------------------------------------------
   const dateRange = useMemo(() => getDateRange(timeRange, dbType), [timeRange, dbType]);
+
+  const days = daysBackFromRange(timeRange);
+
+  const sqlQueries = useMemo(() => [
+    { label: 'จังหวัดของโรงพยาบาล', sql: getCurrentHospitalChwpartSql() },
+    { label: 'สรุปจำนวนส่งต่อ', sql: getReferSummarySql(dbType, days) },
+    { label: 'แนวโน้มรายเดือน (12 เดือน)', sql: getMonthlyTrendSql(dbType, 12) },
+    { label: 'สัดส่วนตามระดับเร่งด่วน', sql: getReferByEmergencyTypeSql(dbType, days) },
+    { label: 'Top 10 โรงพยาบาลปลายทาง', sql: getTopDestinationsSql(dbType, days, 10) },
+  ], [dbType, days]);
 
   const pieData = useMemo(() => {
     if (!summaryQuery.data) return [];
@@ -367,8 +326,7 @@ export default function ReferOutDashboard() {
     summaryQuery.isLoading ||
     trendQuery.isLoading ||
     emergencyQuery.isLoading ||
-    topDestQuery.isLoading ||
-    recentQuery.isLoading;
+    topDestQuery.isLoading;
 
   return (
     <div className="refer-out-dashboard">
@@ -385,6 +343,10 @@ export default function ReferOutDashboard() {
           </p>
         </div>
         <div className="dashboard-actions">
+          <Button variant="outline" size="sm" onClick={() => setShowSql(true)} className="gap-1.5">
+            <Code2 className="h-4 w-4" />
+            SQL
+          </Button>
           <div className="time-filter">
             <Filter className="h-4 w-4 text-muted-foreground" />
             <select
@@ -591,96 +553,8 @@ export default function ReferOutDashboard() {
         </Card>
       </div>
 
-      {/* Recent Referrals Table */}
-      <Card>
-        <CardHeader className="chart-header">
-          <CardTitle className="chart-title">
-            <Calendar className="h-5 w-5" />
-            รายการส่งต่อล่าสุด
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {recentQuery.isLoading ? (
-            <Skeleton className="h-64 w-full" />
-          ) : recentQuery.data && recentQuery.data.length > 0 ? (
-            <div className="table-wrapper">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>เลขที่ส่งต่อ</TableHead>
-                    <TableHead>วันที่</TableHead>
-                    <TableHead>HN</TableHead>
-                    <TableHead>ผู้ป่วย</TableHead>
-                    <TableHead>โรงพยาบาลปลายทาง</TableHead>
-                    <TableHead>เขต</TableHead>
-                    <TableHead>PDX</TableHead>
-                    <TableHead>จุดส่งต่อ</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {recentQuery.data.map((row, i) => (
-                    <TableRow
-                      key={`${row.refer_number}-${i}`}
-                      className="table-row-clickable"
-                      onClick={() => setDetailRecord(row)}
-                    >
-                      <TableCell className="font-medium">{row.refer_number}</TableCell>
-                      <TableCell>
-                        {row.refer_date}
-                        <span className="text-muted-foreground text-xs block">
-                          {row.refer_time?.slice(0, 5)}
-                        </span>
-                      </TableCell>
-                      <TableCell>{row.hn}</TableCell>
-                      <TableCell>{row.patient_name}</TableCell>
-                      <TableCell>{row.dest_hospital || 'ไม่ระบุ'}</TableCell>
-                      <TableCell>
-                        <Badge
-                          style={{
-                            backgroundColor: getZoneColor(
-                              getZoneLabel(row.chwpart, currentChwpart),
-                            ),
-                            color: 'white',
-                          }}
-                        >
-                          {getZoneLabel(row.chwpart, currentChwpart)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{row.pdx}</TableCell>
-                      <TableCell>{row.refer_point}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <div className="empty-state">ไม่พบรายการส่งต่อในช่วงเวลาที่เลือก</div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Detail Dialog */}
-      <Dialog open={detailRecord !== null} onOpenChange={(open) => { if (!open) setDetailRecord(null); }}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>รายละเอียดการส่งต่อ</DialogTitle>
-            <DialogDescription>
-              เลขที่ส่งต่อ {detailRecord?.refer_number}
-            </DialogDescription>
-          </DialogHeader>
-          {detailRecord && (
-            <div className="detail-grid">
-              <DetailItem label="วันที่ส่งต่อ" value={`${detailRecord.refer_date} ${detailRecord.refer_time?.slice(0, 5)}`} />
-              <DetailItem label="HN" value={detailRecord.hn} />
-              <DetailItem label="ผู้ป่วย" value={detailRecord.patient_name} />
-              <DetailItem label="โรงพยาบาลปลายทาง" value={detailRecord.dest_hospital || 'ไม่ระบุ'} />
-              <DetailItem label="เขต" value={getZoneLabel(detailRecord.chwpart, currentChwpart)} />
-              <DetailItem label="PDX (ICD-10)" value={detailRecord.pdx} />
-              <DetailItem label="จุดส่งต่อ" value={detailRecord.refer_point} />
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* SQL Preview */}
+      <SqlPreviewDialog open={showSql} onOpenChange={setShowSql} queries={sqlQueries} />
 
       {/* Styles */}
       <style>{`
@@ -861,48 +735,6 @@ export default function ReferOutDashboard() {
           flex-shrink: 0;
         }
 
-        .table-wrapper {
-          overflow-x: auto;
-        }
-
-        .table-row-clickable {
-          cursor: pointer;
-          transition: background 0.15s ease;
-        }
-
-        .table-row-clickable:hover {
-          background: hsl(var(--muted) / 0.4);
-        }
-
-        .detail-grid {
-          display: grid;
-          grid-template-columns: repeat(2, 1fr);
-          gap: 1rem;
-          padding-top: 0.5rem;
-        }
-
-        @media (max-width: 640px) {
-          .detail-grid {
-            grid-template-columns: 1fr;
-          }
-        }
-
-        .detail-item {
-          display: flex;
-          flex-direction: column;
-          gap: 0.25rem;
-        }
-
-        .detail-label {
-          font-size: 0.75rem;
-          color: hsl(var(--muted-foreground));
-        }
-
-        .detail-value {
-          font-size: 0.9375rem;
-          font-weight: 500;
-          color: hsl(var(--foreground));
-        }
       `}</style>
     </div>
   );
@@ -956,11 +788,3 @@ function KpiCard({
   );
 }
 
-function DetailItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="detail-item">
-      <span className="detail-label">{label}</span>
-      <span className="detail-value">{value || '-'}</span>
-    </div>
-  );
-}
