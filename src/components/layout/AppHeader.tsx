@@ -4,34 +4,15 @@
 // =============================================================================
 
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
 import { useBmsSessionContext } from '@/contexts/BmsSessionContext';
 import {
   Activity,
-  LayoutDashboard,
-  Users,
   LogOut,
   Database,
   ChevronDown,
   Copy,
   Check,
 } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
-
-// ---------------------------------------------------------------------------
-// Navigation tab definitions
-// ---------------------------------------------------------------------------
-
-interface NavTab {
-  label: string;
-  path: string;
-  icon: LucideIcon;
-}
-
-const NAV_TABS: NavTab[] = [
-  { label: 'หน้าหลัก', path: '/', icon: LayoutDashboard },
-  { label: 'รายชื่อผู้ป่วย', path: '/patients', icon: Users },
-];
 
 // ---------------------------------------------------------------------------
 // Component
@@ -39,7 +20,6 @@ const NAV_TABS: NavTab[] = [
 
 export function AppHeader() {
   const { session, disconnectSession } = useBmsSessionContext();
-  const location = useLocation();
   const [copied, setCopied] = useState(false);
 
   const databaseLabel =
@@ -84,32 +64,6 @@ export function AppHeader() {
             <span className="brand-subtitle">ระบบบันทึกการส่งต่อผู้ป่วย HOSxP</span>
           </div>
         </div>
-
-        {/* -----------------------------------------------------------------
-            Center: Navigation
-            ----------------------------------------------------------------- */}
-        <nav className="header-nav">
-          {NAV_TABS.map((tab) => {
-            const isActive =
-              tab.path === '/'
-                ? location.pathname === '/'
-                : location.pathname.startsWith(tab.path);
-
-            const Icon = tab.icon;
-
-            return (
-              <Link
-                key={tab.path}
-                to={tab.path}
-                className={`nav-tab ${isActive ? 'nav-tab-active' : ''}`}
-              >
-                <Icon className="h-4 w-4" />
-                <span>{tab.label}</span>
-                {isActive && <span className="nav-tab-indicator" />}
-              </Link>
-            );
-          })}
-        </nav>
 
         {/* -----------------------------------------------------------------
             Right: Session Info
