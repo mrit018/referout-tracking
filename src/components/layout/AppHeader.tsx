@@ -60,8 +60,8 @@ export function AppHeader() {
             <Activity className="h-5 w-5" />
           </div>
           <div className="brand-text">
-            <h1 className="brand-title">ทะเบียนส่งผู้ป่วย</h1>
-            <span className="brand-subtitle">ระบบบันทึกการส่งต่อผู้ป่วย HOSxP</span>
+            <h1 className="brand-title">ระบบทะเบียนติดตามการส่งต่อผู้ป่วย (Refer Out)</h1>
+            <span className="brand-subtitle">จังหวัดกาญจนบุรี · โรงพยาบาลไทรโยค (11278)</span>
           </div>
         </div>
 
@@ -173,19 +173,22 @@ export function AppHeader() {
         }
 
         .brand-title {
-          font-size: 0.9375rem;
+          font-size: 0.875rem;
           font-weight: 600;
           color: white;
           margin: 0;
           line-height: 1.2;
           letter-spacing: -0.01em;
+          max-width: 32rem;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
 
         .brand-subtitle {
           font-size: 0.6875rem;
-          color: rgba(255, 255, 255, 0.4);
-          letter-spacing: 0.05em;
-          text-transform: uppercase;
+          color: rgba(255, 255, 255, 0.55);
+          letter-spacing: 0.02em;
         }
 
         /* Navigation */

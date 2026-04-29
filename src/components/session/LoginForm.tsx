@@ -42,17 +42,17 @@ export function LoginForm({ onConnect, error, isConnecting }: LoginFormProps) {
               <Activity className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="branding-title">BMS Dashboard</h1>
-              <p className="branding-subtitle">Hospital Intelligence Platform</p>
+              <h1 className="branding-title">ระบบทะเบียนติดตามการส่งต่อผู้ป่วย</h1>
+              <p className="branding-subtitle">Refer Out Tracking · จังหวัดกาญจนบุรี</p>
             </div>
           </div>
 
           {/* Tagline */}
           <div className="branding-tagline">
             <h2>
-              วิเคราะห์ข้อมูลโรงพยาบาล
+              ติดตามการส่งต่อผู้ป่วย
               <br />
-              <span className="text-gradient">ด้วยพลัง AI</span>
+              <span className="text-gradient">โรงพยาบาลไทรโยค</span>
             </h2>
           </div>
 
@@ -60,38 +60,38 @@ export function LoginForm({ onConnect, error, isConnecting }: LoginFormProps) {
           <div className="branding-features">
             <div className="feature-item">
               <div className="feature-icon">
-                <Database className="h-4 w-4" />
+                <Database className="h-4 w-4" aria-hidden="true" />
               </div>
               <div>
-                <h3>เชื่อมต่อ HOSxP</h3>
-                <p>เข้าถึงข้อมูลแบบ Real-time จากฐานข้อมูลโรงพยาบาล</p>
+                <h3>แดชบอร์ดสรุปการส่งต่อ</h3>
+                <p>ภาพรวมการส่งต่อผู้ป่วยตามจังหวัด/เขต พร้อมแนวโน้มรายเดือน</p>
               </div>
             </div>
 
             <div className="feature-item">
               <div className="feature-icon">
-                <Zap className="h-4 w-4" />
+                <Zap className="h-4 w-4" aria-hidden="true" />
               </div>
               <div>
-                <h3>AI-Powered Dashboard</h3>
-                <p>สร้าง Dashboard อัตโนมัติด้วย Natural Language</p>
+                <h3>รายชื่อผู้ป่วยส่งต่อ</h3>
+                <p>ค้นหา กรอง และส่งออกข้อมูลเป็น CSV / Excel / Google Sheets</p>
               </div>
             </div>
 
             <div className="feature-item">
               <div className="feature-icon">
-                <Shield className="h-4 w-4" />
+                <Shield className="h-4 w-4" aria-hidden="true" />
               </div>
               <div>
-                <h3>Secure Access</h3>
-                <p>การเข้าถึงที่ปลอดภัยผ่าน BMS Session ID</p>
+                <h3>เข้าถึงปลอดภัย (Read-only)</h3>
+                <p>ดึงข้อมูลแบบ read-only ผ่าน BMS Session API</p>
               </div>
             </div>
           </div>
 
           {/* Footer */}
           <div className="branding-footer">
-            <span>Powered by BMS Session API</span>
+            <span>โรงพยาบาลไทรโยค (11278) · Powered by BMS Session API</span>
           </div>
         </div>
 
